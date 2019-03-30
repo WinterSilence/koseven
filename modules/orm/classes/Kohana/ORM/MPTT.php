@@ -2,60 +2,67 @@
 /**
  * Adds basic MPTT functionality to ORM.
  *
- * @package    Kohana/ORM
- * @author     Kohana Team
- * @copyright  (c) Kohana Team
- * @license    https://koseven.ga/LICENSE.md
+ * @package   Kohana/ORM
+ * @author    Kohana Team
+ * @copyright (c) Kohana Team
+ * @license   https://koseven.ga/LICENSE.md
  */
 class Kohana_ORM_MPTT extends ORM
 {
+    const RELATIONSHIP_AFTER = 'after';
+    const RELATIONSHIP_FIRST_CHILD = 'first child of';
     /**
-     * @var string Current scope.
+     * @var string Current scope
      */
     protected $_scope;
     /**
-     * @var string Scope column.
+     * @var string Scope column
      */
     protected $_scope_key = 'scope';
     /**
-     * @var string Left key column.
+     * @var string Left key column
      */
     protected $_left_key = 'left_key';
     /**
-     * @var string Right key column.
+     * @var string Right key column
      */
     protected $_right_key = 'right_key';
     /**
-     * @var array Sibling relationships.
+     * @var string Depth column
      */
-    protected $_sibling_relationships = ['after'];
+    protected $_depth_key = 'depth';
     /**
-     * @var array Child relationships.
+     * @var array Sibling relationships
      */
-    protected $_child_relationships = ['first child of'];
+    protected $_sibling_relationships = [self::RELATIONSHIP_AFTER];
+    /**
+     * @var array Child relationships
+     */
+    protected $_child_relationships = [self::RELATIONSHIP_FIRST_CHILD];
     
     /**
-     * Constructs a new model and loads a record if given
+     * Constructs a new model and loads a record if given.
      *
      * @param  mixed $id Parameter for find or object to load
      * @param  string $scope
+     * @return void
      */
     public function __construct($id = NULL, $scope = '')
     {
+        $this->scope($scope);
         parent::__construct($id);
-        $this->_scope = (string) $scope;
     }
 
     /**
      * Gets/sets scope.
-     * @param mixed $value New scope
+     * @param string|null $value New scope
      * @return mixed
      */
     public function scope($value = NULL)
     {
         if ($value !== NULL)
         {
-            $this->_scope = $value;
+            $this->_scope = (string) $value;
             return $this;
         }
         return $this->_scope;
@@ -65,48 +72,46 @@ class Kohana_ORM_MPTT extends ORM
      * Creates a root node.
      *
      * @param  array $data Custom data array(column => value, column2 => value2, ...)
-     * @return mixed Root id
+     * @return integer Root id
      * @throws Database_Exception A root node already exists.
      */
     public function create_root(array $data = [])
     {
         // Make sure there isn't already a root node.
         if ($this->has_root())
+        {
             throw new Database_Exception('A root node already exists.');
-
+        }
         // System data.
-        $sys_data = ['lft' => 1, 'rgt' => 2];
-
+        $defaults = [$this->_left_key => 1, $this->_right_key => 2];
         // Add scope to system data.
-        $this->_scope !== NULL AND $sys_data['scope'] = $this->_scope;
-
+        $this->_scope !== NULL AND $defaults[$this->_scope_key] = $this->_scope;
         // Merge custom data with system data.
-        $data = array_merge($sys_data, $data);
-
+        $data = array_merge($defaults, $data);
         // Create the root node and return the insert_id (root id).
         return DB::insert($this->_table_name, array_keys($data))
             ->values(array_values($data))
-            ->execute();
+            ->execute($this->_db);
     }
 
     /**
      * Inserts a node structure at a given position.
      *
      * $data accepts two formats:
+     * 
+     * 1 - [column => value, column => value, ...]
+     * 2 - [[column => value, column => value], [column => value, ...], ...]
      *
-     * 1 - array(column => value, column => value, ...)
-     * 2 - array(array(column => value, column => value), array(column => value,…)...)
-     *
-     * When passing numerous nodes in data, lft and rgt values
+     * When passing numerous nodes in data, `left_key` and `right_key` values
      * must be included to specify the structure.
-     * In this case, the lft of the root node is always 1.
+     * In this case, the `left_key` of the root node is always 1.
      * Their position will automatically be offset when inserting.
      *
-     * array(
-     *   array('lft' => 1, 'rgt' => 6),
-     *   array('lft' => 2, 'rgt' => 5),
-     *   array('lft' => 3, 'rgt' => 4),
-     * );
+     * [
+     *   [left_key' => 1, 'right_key' => 6],
+     *   ['left_key' => 2, 'right_key' => 5],
+     *   ['left_key' => 3, 'right_key' => 4],
+     * ];
      *
      * Table specific data is added normally as colum value pairs.
      * Columns that are omitted will fallback to their database default values.
@@ -125,7 +130,7 @@ class Kohana_ORM_MPTT extends ORM
             throw new Database_Exception('You must create a root before inserting data.');
         }
         // Make sure the root node doesn't have siblings.
-        if ($relationship == 'after' AND $insert_node_id == $this->get_root_id())
+        if ($relationship == self::RELATIONSHIP_AFTER AND $insert_node_id == $this->get_root_id())
         {
             throw new Database_Exception('The root node cannot have siblings.');
         }
@@ -135,30 +140,30 @@ class Kohana_ORM_MPTT extends ORM
         ! is_array(reset($data)) AND $data = [$data];
 
         // Make sure we have data, and create the gap for insertion.
-        if(count($data) > 0 AND $gap_lft = $this->_create_gap($relationship, $insert_node_id, count($data) * 2))
+        if (count($data) > 0 AND $gap_left = $this->_create_gap($relationship, $insert_node_id, count($data) * 2))
         {
-            $offset = $gap_lft - 1;
+            $offset = $gap_left - 1;
 
             foreach($data as $node)
             {
                 // Add lft and rgt for single inserts.
                 if (count($data) == 1)
                 {
-                    $node['lft'] = 1;
-                    $node['rgt'] = 2;
+                    $node[$this->_left_key] = 1;
+                    $node[$this->_right_key] = 2;
                 }
 
                 // Add scope.
-                $this->_scope !== NULL AND $node['scope'] = $this->_scope;
+                $this->_scope !== NULL AND $node[$this->_scope_key] = $this->_scope;
 
                 // Add node offsets.
-                $node['lft'] = $node['lft'] + $offset;
-                $node['rgt'] = $node['rgt'] + $offset;
+                $node[$this->_left_key] = $node[$this->_left_key] + $offset;
+                $node[$this->_right_key] = $node[$this->_right_key] + $offset;
 
                 // Insert the data.
                 $inserted_ids[] = DB::insert($this->_table_name, array_keys($node))
                     ->values(array_values($node))
-                    ->execute();
+                    ->execute($this->_db);
             }
         }
 
@@ -169,7 +174,7 @@ class Kohana_ORM_MPTT extends ORM
      * Moves a node and its children.
      *
      * @param   int      node id
-     * @param   string   relationship to move with ('after', 'first child of')
+     * @param   string   relationship to move with [sef::RELATIONSHIP_AFTER, sef::RELATIONSHIP_FIRST_CHILD]
      * @param   int      node id to move to
      * @return  bool     moved
      * @throws  Database_Exception
@@ -186,13 +191,17 @@ class Kohana_ORM_MPTT extends ORM
         if ($node = $this->get_node($node_id) AND $to_node = $this->get_node($to_node_id))
         {
             // Don't allow the root node to be moved.
-            if ($node['lft'] == 1)
+            if ($node[$this->_left_key] == 1)
+            {
                 throw new Database_Exception('The root node cannot be moved.');
-
+            }
             // Don't allow a parent to become its own child.
             if (
                 in_array($relationship, $this->_child_relationships) AND
-                ($node['lft'] < $to_node['lft'] AND $node['rgt'] > $to_node['rgt'])
+                (
+                    $node[$this->_left_key] < $to_node[$this->_left_key] AND 
+                    $node[$this->_right_key] > $to_node[$this->_right_key]
+                )
             )
             {
                 throw new Database_Exception('A parent cannot become a child of its own child.');
@@ -200,46 +209,45 @@ class Kohana_ORM_MPTT extends ORM
             // Database_Exception('The root node cannot have siblings.') is thown in _create_gap().
 
             // Calculate the size of the gap. (number of node positions we are moving)
-            $gap_size = (1 + (($node['rgt'] - ($node['lft'] + 1)) / 2)) * 2;
+            $gap_size = (1 + (($node[$this->_right_key] - ($node[$this->_left_key] + 1)) / 2)) * 2;
 
             // Create the gap to move to.
             if ($this->_create_gap($relationship, $to_node_id, $gap_size))
             {
                 // Adjust the node position if it was affected by the gap.
-                if ($to_node['rgt'] < $node['lft'])
+                if ($to_node[$this->_right_key] < $node[$this->_left_key])
                 {
-                    $node['lft'] = $node['lft'] + $gap_size;
-                    $node['rgt'] = $node['rgt'] + $gap_size;
+                    $node[$this->_left_key] = $node[$this->_left_key] + $gap_size;
+                    $node[$this->_right_key] = $node[$this->_right_key] + $gap_size;
                 }
 
                 // Calculate the increment based on the relationship.
                 switch ($relationship)
                 {
-                    case 'first child of':
-                        $increment = $to_node['lft'] + 1 - $node['lft'];
-                    break;
-                    case 'after':
-                        $increment = $to_node['rgt'] + 1 - $node['lft'];
-                    break;
-
+                    case self::RELATIONSHIP_FIRST_CHILD:
+                        $increment = $to_node[$this->_left_key] + 1 - $node[$this->_left_key];
+                        break;
+                    case self::RELATIONSHIP_AFTER:
+                        $increment = $to_node[$this->_right_key] + 1 - $node[$this->_left_key];
+                        break;
                     // Database_Exception(':relationship is not a supported relationship.') is thown in _create_gap().
                 }
 
                 // Move the node and its children into the gap.
                 $this->_update_position(
-                    ['lft', 'rgt'], 
+                    [$this->_left_key, $this->_right_key], 
                     $increment, 
                     [
-                        ['lft', '>=', $node['lft']],
-                        ['rgt', '<=', $node['rgt']],
+                        [$this->_left_key, '>=', $node[$this->_left_key]],
+                        [$this->_right_key, '<=', $node[$this->_right_key]],
                     ]
                 );
 
                 // Close the gap created by the moved nodes.
-                $limit = $node['lft'] - 1;
+                $limit = $node[$this->_left_key] - 1;
                 $increment = $gap_size * -1;
-                $this->_update_position('lft', $increment, ['lft', '>', $limit]);
-                $this->_update_position('rgt', $increment, ['rgt', '>', $limit]);
+                $this->_update_position($this->_left_key, $increment, [$this->_left_key, '>', $limit]);
+                $this->_update_position($this->_right_key, $increment, [$this->_right_key, '>', $limit]);
 
                 $moved = TRUE;
             }
@@ -272,15 +280,14 @@ class Kohana_ORM_MPTT extends ORM
             $tree = $this->get_tree()->as_array();
 
             // Loop the tree and delete ids.
-            foreach ($tree as $k => $v)
+            foreach ($tree as $key => $val)
             {
-                if ($v['lft'] >= $node['lft'] AND $v['rgt'] <= $node['rgt'])
+                if ($val[$this->_left_key] >= $node[$this->_left_key] AND $val[$this->_right_key] <= $node[$this->_right_key])
                 {
                     // Save the ids to delete.
-                    $ids_to_delete[] = $v['id'];
-
+                    $ids_to_delete[] = $val[$this->_primary_key];
                     // Remove ids that will be deleted from the tree.
-                    unset($tree[$k]);
+                    unset($tree[$key]);
                 }
             }
 
@@ -292,10 +299,10 @@ class Kohana_ORM_MPTT extends ORM
 
                 foreach ($ids_to_delete as $id_to_delete)
                 {
-                    $query->or_where('id', '=', $id_to_delete);
+                    $query->or_where($this->_primary_key, '=', $id_to_delete);
                 }
 
-                $num_deletions = $this->_where_scope($query)->execute();
+                $num_deletions = $this->_where_scope($query)->execute($this->_db);
 
                 // We have deletions.
                 if ($num_deletions)
@@ -305,8 +312,8 @@ class Kohana_ORM_MPTT extends ORM
 
                     // Close the gap created by the deletion.
                     $increment = ($num_deletions * 2) * -1;
-                    $this->_update_position('lft', $increment, ['lft', '>', $node['lft']]);
-                    $this->_update_position('rgt', $increment, ['rgt', '>', $node['lft']]);
+                    $this->_update_position($this->_left_key, $increment, [$this->_left_key, '>', $node[$this->_left_key]]);
+                    $this->_update_position($this->_right_key, $increment, [$this->_right_key, '>', $node[$this->_left_key]]);
                 }
             }
         }
@@ -320,15 +327,16 @@ class Kohana_ORM_MPTT extends ORM
      * Gets a node from a node id.
      *
      * @param  int $node_id
-     * @return mixed node array, or FALSE if node does not exist
+     * @return mixed node array or FALSE if node does not exist
      */
     public function get_node($node_id)
     {
-        $query = DB::select()->from($this->_table_name)->where('id', '=', $node_id);
-
-        $query = $this->_where_scope($query);
-
-        return $query->execute()->current();
+        $query = DB::select()
+            ->from($this->_table_name)
+            ->where($this->_primary_key, '=', $node_id);
+        return $this->_where_scope($query)
+                    ->execute($this->_db)
+                    ->current();
     }
 
     /**
@@ -340,33 +348,29 @@ class Kohana_ORM_MPTT extends ORM
     {
         $query = DB::select()
             ->from($this->_table_name)
-            ->where('lft', '=', 1);
-
-        $query = $this->_where_scope($query);
-
-        return $query->execute()->current();
+            ->where($this->_left_key, '=', 1);
+        return $this->_where_scope($query)
+                    ->execute($this->_db)
+                    ->current();
     }
 
     /**
      * Gets the root id.
      *
-     * @return  mixed    root id, or FALSE if root does not exist
-     *
-     * @uses    get_rood_node()
-     *
-     * @caller  insert()
+     * @return  integer|FALSE  root id or FALSE if root does not exist
+     * @uses    self::get_rood_node()
+     * @caller  self::insert()
      */
     public function get_root_id()
     {
         $root = $this->get_root_node();
-
-        return isset($root['id']) ? $root['id'] : FALSE;
+        return isset($root[$this->_primary_key]) ? $root[$this->_primary_key] : FALSE;
     }
 
     /**
      * Checks if the tree has a root.
      *
-     * @return  bool   has root
+     * @return  bool  has root
      */
     public function has_root()
     {
@@ -376,37 +380,47 @@ class Kohana_ORM_MPTT extends ORM
     /**
      * Gets the tree with an auto calculated depth column.
      *
-     * @param   int      node id (start from a given node) [def: NULL]
-     * @return  SQL obj  tree obj
+     * @param   integer|NULL     node id (start from a given node)
+     * @return  object  tree object
      */
     public function get_tree($node_id = NULL)
     {
-        $query = DB::select('*', [DB::expr('COUNT(`parent`.`id`) - 1'), 'depth'])
-            ->from([$this->_table_name, 'parent'], [$this->_table_name, 'child'])
-            ->where('child.lft', 'BETWEEN', DB::expr('`parent`.`lft` AND `parent`.`rgt`'))
-            ->group_by('child.id')
-            ->order_by('child.lft');
+        $query = DB::select('*', [DB::expr('COUNT(p.' . $this->_primary_key . ') - 1'), $this->_depth_key])
+            ->from([$this->_table_name, 'p'], [$this->_table_name, 'c'])
+            ->where(
+                'c.' . $this->_left_key, 
+                'BETWEEN', 
+                DB::expr('p.' . $this->_left_key . ' AND p.' . $this->_right_key)
+            )
+            ->group_by('c.' . $this->_primary_key)
+            ->order_by('c.' . $this->_left_key);
 
         if ($this->_scope !== NULL)
         {
-            $query->where('parent.scope', '=', $this->_scope);
-            $query->where('child.scope', '=', $this->_scope);
+            $query->where('p.' . $this->_scope_key, '=', $this->_scope);
+            $query->where('c.' . $this->_scope_key, '=', $this->_scope);
         }
 
         if ($node_id !== NULL)
         {
-            $query->where('child.lft', '>=', DB::select('lft')->from($this->_table_name)->where('id', '=', $node_id));
-            $query->where('child.rgt', '<=', DB::select('rgt')->from($this->_table_name)->where('id', '=', $node_id));
+            $subquery = DB::select($this->_left_key)
+                ->from($this->_table_name)
+                ->where($this->_primary_key, '=', $node_id);
+            $query->where('c.' . $this->_left_key, '>=', $subquery);
+            
+            $subquery = DB::select($this->_right_key)
+                ->from($this->_table_name)
+                ->where($this->_primary_key, '=', $node_id)
+            $query->where('c.' . $this->_right_key, '<=', $subquery);
         }
 
-        $tree = $query->execute();
+        $tree = $query->execute($this->_db);
 
-        return $query->execute();
+        return $query->execute($this->_db);
     }
 
     /**
-     * Validates a tree.
-     * Empty trees are considered valid.
+     * Validates a tree. Empty trees are considered valid.
      *
      * @return bool
      */
@@ -423,13 +437,13 @@ class Kohana_ORM_MPTT extends ORM
             // Modify the ancestors on depth change.
             if (isset($current_depth))
             {
-                if ($node['depth'] > $current_depth)
+                if ($node[$this->_depth_key] > $current_depth)
                 {
-                    array_push($ancestors, $tree[$key-1]);
+                    array_push($ancestors, $tree[$key - 1]);
                 }
-                elseif ($node['depth'] < $current_depth)
+                elseif ($node[$this->_depth_key] < $current_depth)
                 {
-                    for ($i=0; $i<$current_depth-$node['depth']; $i++)
+                    for ($i = 0; $i < $current_depth - $node[$this->_depth_key]; $i++)
                     {
                         array_pop($ancestors);
                     }
@@ -437,19 +451,25 @@ class Kohana_ORM_MPTT extends ORM
             }
 
             // If the node has a parent, set it.
-            ! empty($ancestors) AND $parent = $ancestors[count($ancestors)-1];
+            ! empty($ancestors) AND $parent = $ancestors[count($ancestors) - 1];
 
             /**
              * Perform various checks on the node:
              *
-             * 1. lft must be smaller than rgt.
-             * 2. lft and rgt cannot be used by other nodes.
+             * 1. left must be smaller than right.
+             * 2. left and right cannot be used by other nodes.
              * 3. A child node must be inside its parent.
              */
             if (
-                ($node['lft'] >= $node['rgt']) OR
-                (in_array($node['lft'], $positions) OR in_array($node['rgt'], $positions)) OR
-                (isset($parent) AND ($node['lft'] <= $parent['lft'] OR $node['rgt'] >= $parent['rgt']))
+                ($node[$this->_left_key] >= $node[$this->_right_key]) OR (
+                    in_array($node[$this->_left_key], $positions) OR
+                    in_array($node[$this->_right_key], $positions)
+                ) OR (
+                    isset($parent) AND (
+                        $node[$this->_left_key] <= $parent[$this->_left_key] OR
+                        $node[$this->_right_key] >= $parent[$this->_right_key]
+                    )
+                )
             )
             {
                 $valid = FALSE;
@@ -457,11 +477,10 @@ class Kohana_ORM_MPTT extends ORM
             }
 
             // Set the current depth.
-            $current_depth = $node['depth'];
-
+            $current_depth = $node[$this->_depth_key];
             // Save the positions.
-            $positions[] = $node['lft'];
-            $positions[] = $node['rgt'];
+            $positions[] = $node[$this->_left_key];
+            $positions[] = $node[$this->_right_key];
         }
 
         // Apply further checks to non-empty trees.
@@ -469,9 +488,8 @@ class Kohana_ORM_MPTT extends ORM
         {
             // Sort the positions.
             sort($positions);
-
             // Make sure the last position is not larger than needed.
-            if ($positions[count($positions)-1] - $positions[0] + 1 != count($positions))
+            if (($positions[count($positions) - 1] - $positions[0] + 1) != count($positions))
             {
                 $valid = FALSE;
             }
@@ -486,47 +504,47 @@ class Kohana_ORM_MPTT extends ORM
      * @param   string   relationship to gap with
      * @param   int      node id to gap against
      * @param   int      gap size
-     * @return  mixed    gap lft, FALSE on failure
-     *
+     * @return  mixed    gap left, FALSE on failure
      * @throws  Database_Exception
      */
     protected function _create_gap($relationship, $node_id, $size = 2)
     {
-        $gap_lft = FALSE;
+        $gap_left = FALSE;
 
         // Get the node to move against.
         if ($node = $this->get_node($node_id))
         {
             // Don't allow the root node to have siblings.
-            if ($node['lft'] == 1 AND in_array($relationship, $this->_sibling_relationships))
+            if ($node[$this->_left_key] == 1 AND in_array($relationship, $this->_sibling_relationships))
+            {
                 throw new Database_Exception('The root node cannot have siblings.');
+            }
 
             // Get parameters depending on the relationship.
             switch ($relationship)
             {
-                case 'first child of':
-                    $limit = $node['lft'];
-                    $gap_lft = $node['lft'] + 1;
-                break;
-                case 'after':
-                    $limit = $node['rgt'];
-                    $gap_lft = $node['rgt'] + 1;
-                break;
+                case self::RELATIONSHIP_FIRST_CHILD:
+                    $limit = $node[$this->_left_key];
+                    $gap_left = $node[$this->_left_key] + 1;
+                    break;
+                case self::RELATIONSHIP_AFTER:
+                    $limit = $node[$this->_right_key];
+                    $gap_left = $node[$this->_right_key] + 1;
+                    break;
                 default:
                     // Throw an exception if the relationship doesn't exist.
                     throw new Database_Exception(
                         ':relationship is not a supported relationship.',
                         [':relationship' => $relationship]
                     );
-                break;
             }
 
             // Update the node positions to create the gap.
-            $this->_update_position('lft', $size, array('lft', '>', $limit));
-            $this->_update_position('rgt', $size, array('rgt', '>', $limit));
+            $this->_update_position($this->_left_key, $size, [$this->_left_key, '>', $limit]);
+            $this->_update_position($this->_right_key, $size, [$this->_right_key, '>', $limit]);
         }
 
-        return $gap_lft;
+        return $gap_left;
     }
 
     /**
@@ -534,13 +552,13 @@ class Kohana_ORM_MPTT extends ORM
      *
      * Columns accepts two formats:
      *
-     * 1 - string 'lft' or 'rgt'
-     * 2 - array('lft', 'rgt')
+     * 1 - string $this->_left_key or $this->_right_key
+     * 2 - [$this->_left_key, $this->_right_key]
      *
      * Where conditions accept two formats:
      *
-     * 1 - array(column, value, condition)
-     * 2 - array(array(column, value, condition, array(…))
+     * 1 - [column, value, condition]
+     * 2 - [[column, value, condition, [...]]
      *
      * @param   mixed   column(s) (see above)
      * @param   int     increment
@@ -550,15 +568,16 @@ class Kohana_ORM_MPTT extends ORM
     protected function _update_position($columns, $increment, $where)
     {
         // Make sure columns is an array.
-        ! is_array($columns) AND $columns = array($columns);
+        ! is_array($columns) AND $columns = [$columns];
         // Make sure where is an array of arrays.
-        ! is_array($where[0]) AND $where = array($where);
+        ! is_array($where[0]) AND $where = [$where];
         // Build and run the query.
         $query = DB::update($this->_table_name);
 
         foreach ($columns as $column)
         {
-            $query->set([$column => DB::expr('`'.$column.'` + '.$increment)]);
+            $value = DB::expr($this->_db->quote_column($column) . ' + ' . intval($increment));
+            $query->set([$column => $value]);
         }
 
         foreach ($where as $condition)
@@ -566,7 +585,7 @@ class Kohana_ORM_MPTT extends ORM
             $query->where($condition[0], $condition[1], $condition[2]);
         }
 
-        $this->_where_scope($query)->execute();
+        $this->_where_scope($query)->execute($this->_db);
     }
 
     /**
@@ -579,7 +598,7 @@ class Kohana_ORM_MPTT extends ORM
     {
         if ($this->_scope !== NULL)
         {
-            $query->where('scope', '=', $this->_scope);
+            $query->where($this->_scope_key, '=', $this->_scope);
         }
 
         return $query;
