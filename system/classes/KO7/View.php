@@ -114,7 +114,7 @@ abstract class KO7_View {
 	/**
 	 * Assigns a global variable by reference, similar to [View::bind], except
 	 * that the variable will be accessible to all views.
-	 * 
+	 *
 	 * @param   string  $key    variable name
 	 * @param   mixed   $value  referenced variable
 	 * @return  void
@@ -142,7 +142,7 @@ abstract class KO7_View {
 	/**
 	 * Sets the initial view filename and local data. Views should almost
 	 * always only be created using [View::factory].
-	 * 
+	 *
 	 * @param   string|null  $file   view filename
 	 * @param   iterable     $data   array of values
 	 */
@@ -161,7 +161,7 @@ abstract class KO7_View {
 	/**
 	 * Magic method, searches for the given variable and returns its value.
 	 * Local variables will be returned before global variables.
-	 * 
+	 *
 	 * [!!] If the variable has not yet been set, an exception will be thrown.
 	 *
 	 * @param   string  $key  Variable name
@@ -186,7 +186,7 @@ abstract class KO7_View {
 
 	/**
 	 * Magic method, calls [View::set] with the same parameters.
-	 * 
+	 *
 	 * @param   string  $key    variable name
 	 * @param   mixed   $value  value
 	 * @return  void
@@ -198,9 +198,9 @@ abstract class KO7_View {
 
 	/**
 	 * Magic method, determines if a variable is set.
-	 * 
+	 *
 	 * [!!] `NULL` variables are not considered to be set by [isset](https://php.net/isset).
-	 * 
+	 *
 	 * @param   string  $key  variable name
 	 * @return  bool
 	 */
@@ -211,7 +211,7 @@ abstract class KO7_View {
 
 	/**
 	 * Magic method, unsets a given variable.
-	 * 
+	 *
 	 * @param   string  $key    variable name
 	 * @return  void
 	 */
@@ -229,7 +229,7 @@ abstract class KO7_View {
 	{
 		try
 		{
-			return $this->render();
+			return (string) $this->render();
 		}
 		catch (Throwable $e)
 		{
@@ -246,7 +246,7 @@ abstract class KO7_View {
 
 	/**
 	 * Sets the view filename.
-	 * 
+	 *
 	 * @param   string  $file   view filename
 	 * @return  $this
 	 * @throws  View_Exception
@@ -271,7 +271,7 @@ abstract class KO7_View {
 
 	/**
 	 * Gets the view filename.
-	 * 
+	 *
 	 * @param bool $full If true, return full path, else source filename
 	 * @return string|null
 	 */
@@ -283,13 +283,13 @@ abstract class KO7_View {
 	/**
 	 * Assigns a variable by name. Assigned values will be available as a
 	 * variable within the view file.
-	 * 
+	 *
 	 * You can also use an array or Traversable object to set several values at once:
 	 *
 	 *     // Create the values $food and $beverage in the view
 	 *     $view->set(['food' => 'bread', 'beverage' => 'water']);
 	 *
-	 * [!!] Note: When setting with using Traversable object we're not attaching the whole object to the view,
+	 * [!!] When setting with using Traversable object we're not attaching the whole object to the view,
 	 * i.e. the object's standard properties will not be available in the view context.
 	 *
 	 * @param   string|iterable  $key    variable name or an array of variables
@@ -318,10 +318,10 @@ abstract class KO7_View {
 	 * be altered without re-setting them. It is also possible to bind variables
 	 * before they have values. Assigned values will be available as a
 	 * variable within the view file.
-	 * 
+	 *
 	 * @param   string  $key    variable name
 	 * @param   mixed   $value  referenced variable
-	 * @return  $this
+	 * @return  self
 	 */
 	public function bind($key, &$value)
 	{
@@ -331,9 +331,36 @@ abstract class KO7_View {
 	}
 
 	/**
+	 * Deletes all local and optionally global variables.
+	 *
+	 *     $datasets = [['food' => 'bread', 'beverage' => 'water'], ['food' => 'bread']];
+	 *     foreach ($datasets as $key => $dataset)
+	 *     {
+	 *         $datasets[$key] = $view->set($dataset)->render();
+	 *         $view->clear();
+	 *     }
+	 *
+	 * [!!] Useful when template rendering with different datasets.
+	 *
+	 * @param  bool  $all  delete global data?
+	 * @return self
+	 */
+	public function clear($all = FALSE)
+	{
+		$this->_data = [];
+
+		if ($all)
+		{
+			View::$_global_data = [];
+		}
+
+		return $this;
+	}
+
+	/**
 	 * Renders the view object to a string. Global and local data are merged
 	 * and extracted to create local variables within the view file.
-	 * 
+	 *
 	 * [!!] Global variables with the same key name as local variables will be
 	 * overwritten by the local variable.
 	 *

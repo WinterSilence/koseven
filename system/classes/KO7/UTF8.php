@@ -35,6 +35,15 @@ class KO7_UTF8 {
 	public static $called = [];
 
 	/**
+	 * @var  array  List of lower accents for [UTF8::transliterate_to_ascii].
+	 */
+	public static $lower_accents;
+	/**
+	 * @var  array  List of upper accents for [UTF8::transliterate_to_ascii].
+	 */
+	public static $upper_accents;
+
+	/**
 	 * Recursively cleans arrays, objects, and strings. Removes ASCII control
 	 * codes and converts to the requested charset while silently discarding
 	 * incompatible characters.
@@ -54,7 +63,7 @@ class KO7_UTF8 {
 			// Use the application character set
 			$charset = KO7::$charset;
 		}
-		
+
 		if (is_iterable($var))
 		{
 			$vars = [];
@@ -80,7 +89,7 @@ class KO7_UTF8 {
 				mb_substitute_character($substitute_character);
 			}
 		}
-		
+
 		return $var;
 	}
 
