@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -137,13 +136,13 @@
             <tbody>
                 <tr>
                     <th>PHP Version</th>
-                    <?php if (version_compare(PHP_VERSION, '7', '>=')): ?>
+                    <?php if (version_compare(PHP_VERSION, '7.2', '>=')): ?>
                     <td class="pass">
                         <?php echo PHP_VERSION ?>
                     </td>
                     <?php else: $failed = TRUE ?>
-                    <td class="fail">Koseven requires PHP 7 or newer, this version is
-                        <?php echo PHP_VERSION ?>.</td>
+                    <td class="fail">
+		    	Koseven requires PHP 7.2 or newer, this version is <?php echo PHP_VERSION ?>.</td>
                     <?php endif ?>
                 </tr>
                 <tr>
@@ -293,10 +292,8 @@
                 </tr>
                 <tr>
                     <th>GD Enabled</th>
-                    <?php
-                    if (extension_loaded('gd') && version_compare(GD_VERSION, '2.0', '>=')):
-                        if (gd_info()['WebP Support'] && gd_info()['BMP Support']):
-                    ?>
+                    <?php if (extension_loaded('gd') && version_compare(GD_VERSION, '2.0', '>=')): ?>
+                        <?php if (gd_info()['WebP Support'] && gd_info()['BMP Support']): ?>
                             <td class="pass">Pass</td>
                         <?php else: ?>
                             <td class="warning">For full support we recommend installing GD with 'webp' and 'bmp' support.</td>
@@ -307,21 +304,19 @@
                 </tr>
                 <tr>
                     <th>Imagick Enabled</th>
-					<?php
-					if (
-					        extension_loaded('imagick') &&
-                            preg_match('/ImageMagick ([0-9]+\.[0-9]+\.[0-9]+)/', Imagick::getVersion()['versionString'], $api_version) === 1 &&
-							version_compare($api_version[1], '6.9', '>=')
-                    ):
-						if (Imagick::queryFormats('WEBP') && Imagick::queryFormats('BMP')):
-							?>
-                            <td class="pass">Pass</td>
-						<?php else: ?>
+		    <?php if (
+			    extension_loaded('imagick')
+			    && preg_match('/ImageMagick ([0-9]+\.[0-9]+\.[0-9]+)/', Imagick::getVersion()['versionString'], $api_version)
+			    && version_compare($api_version[1], '6.9', '>=')
+		    ): ?>
+		    	<?php if (Imagick::queryFormats('WEBP') && Imagick::queryFormats('BMP')): ?>
+			    <td class="pass">Pass</td>
+		    	<?php else: ?>
                             <td class="warning">For full support we recommend installing imagick with 'webp' and 'bmp' support.</td>
-						<?php endif; ?>
-					<?php else: ?>
+		    	<?php endif; ?>
+		<?php else: ?>
                         <td class="fail">Koseven can use <a href="http://php.net/imagick">Imagick</a> >= v6.9 for Image manipulation.</td>
-					<?php endif ?>
+		<?php endif; ?>
                 </tr>
                 <tr>
                     <th>MySQLi Enabled</th>
