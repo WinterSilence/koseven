@@ -5,13 +5,16 @@
   "keywords": [
     "kohana",
     "kohana-php7",
-    "koseven"
+    "koseven",
+    "ko7",
+    "php",
+    "framework"
   ],
   "homepage": "https://koseven.dev/",
   "authors": [
     {
       "name": "Koseven Team",
-      "homepage": "https://koseven.dev/",
+      "homepage": "https://koseven.dev",
       "role": "developer"
     },
     {
