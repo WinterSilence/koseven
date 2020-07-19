@@ -1,3 +1,5 @@
 <?php
 
-abstract class Controller extends KO7_Controller {}
+abstract class Controller extends KO7_Controller
+{
+}

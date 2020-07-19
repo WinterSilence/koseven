@@ -1,3 +1,5 @@
 <?php
 
-class URL extends KO7_URL {}
+class URL extends KO7_URL
+{
+}

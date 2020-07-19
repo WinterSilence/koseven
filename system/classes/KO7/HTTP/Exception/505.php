@@ -1,10 +1,11 @@
 <?php
 
-class KO7_HTTP_Exception_505 extends HTTP_Exception {
+class KO7_HTTP_Exception_505 extends HTTP_Exception
+{
 
-	/**
-	 * @var   integer    HTTP 505 HTTP Version Not Supported
-	 */
-	protected $_code = 505;
+    /**
+     * @var   integer    HTTP 505 HTTP Version Not Supported
+     */
+    protected $_code = 505;
 
 }

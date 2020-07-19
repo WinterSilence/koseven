@@ -1,10 +1,11 @@
 <?php
 
-class KO7_HTTP_Exception_429 extends HTTP_Exception {
+class KO7_HTTP_Exception_429 extends HTTP_Exception
+{
 
-	/**
-	 * @var   integer    HTTP 429 Too Many Requests
-	 */
-	protected $_code = 429;
+    /**
+     * @var   integer    HTTP 429 Too Many Requests
+     */
+    protected $_code = 429;
 
 }

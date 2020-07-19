@@ -15,25 +15,25 @@
 
 class KO7_ORMTest extends Unittest_TestCase
 {
-	/**
-	 * Ensure has() doesn't attempt to count non-countables.
-	 *
-	 * @test
-	 * @covers ORM::has
-	 */
-	public function test_has()
-	{
-		$orm = new ORM_Example;
+    /**
+     * Ensure has() doesn't attempt to count non-countables.
+     *
+     * @test
+     * @covers ORM::has
+     */
+    public function test_has()
+    {
+        $orm = new ORM_Example;
 
-		$result = $orm->has('children', FALSE);
+        $result = $orm->has('children', false);
 
-		$this->assertSame(FALSE, $result);
-	}
+        $this->assertSame(false, $result);
+    }
 }
 
 class ORM_Example extends KO7_ORM
 {
-	public function __construct()
-	{
-	}
+    public function __construct()
+    {
+    }
 }

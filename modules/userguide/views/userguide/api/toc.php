@@ -1,7 +1,8 @@
-<h1><?php echo 'Available Classes' ?></h1>
+<h1><?php
+    echo 'Available Classes' ?></h1>
 
 <label>Filter:</label>
-<input type="text" id="kodoc-api-filter-box" />
+<input type="text" id="kodoc-api-filter-box"/>
 
 <script type="text/javascript">
 (function($) {
@@ -51,19 +52,27 @@
 		$('#kodoc-api-filter-box').api_filter('#kodoc-body').focus();
 	});
 })(jQuery);
+
 </script>
 
 <div class="class-list">
 
-	<?php foreach ($classes as $class => $methods): $link = $route->uri(['class' => $class]) ?>
-	<div class="class <?php echo Text::alternate('left', 'right') ?>">
-		<h2><?php echo HTML::anchor($link, $class, NULL, NULL, TRUE) ?></h2>
-		<ul class="methods">
-		<?php foreach ($methods as $method): ?>
-			<li><?php echo HTML::anchor("{$link}#{$method}", "{$class}::{$method}", NULL, NULL, TRUE) ?></li>
-		<?php endforeach ?>
-		</ul>
-	</div>
-	<?php endforeach ?>
+    <?php
+    foreach ($classes as $class => $methods): $link = $route->uri(['class' => $class]) ?>
+        <div class="class <?php
+        echo Text::alternate('left', 'right') ?>">
+            <h2><?php
+                echo HTML::anchor($link, $class, null, null, true) ?></h2>
+            <ul class="methods">
+                <?php
+                foreach ($methods as $method): ?>
+                    <li><?php
+                        echo HTML::anchor("{$link}#{$method}", "{$class}::{$method}", null, null, true) ?></li>
+                <?php
+                endforeach ?>
+            </ul>
+        </div>
+    <?php
+    endforeach ?>
 
 </div>

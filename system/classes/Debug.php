@@ -1,3 +1,5 @@
 <?php
 
-class Debug extends KO7_Debug {}
+class Debug extends KO7_Debug
+{
+}

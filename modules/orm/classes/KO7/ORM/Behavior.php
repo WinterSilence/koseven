@@ -2,49 +2,59 @@
 
 /**
  * @package    KO7/ORM
- *
  * @copyright  (c) 2016-2018 Koseven Team
  * @license    https://koseven.dev/LICENSE
  */
-class KO7_ORM_Behavior {
+class KO7_ORM_Behavior
+{
 
-	/**
-	 * Database query builder
-	 * @var Database_Query_Builder_Select
-	 */
-	protected $_config;
+    /**
+     * Database query builder
+     *
+     * @var Database_Query_Builder_Select
+     */
+    protected $_config;
 
-	/**
-	 * Creates and returns a new ORM behavior.
-	 *
-	 * @chainable
-	 * @param   string  $type   Type name
-	 * @param   mixed   $id     Parameter for find()
-	 * @return  ORM
-	 */
-	public static function factory($behavior, $config = NULL)
-	{
-		if ( ! is_string($behavior) AND is_array($config))
-		{
-			if ( ! is_callable($config))
-				throw new KO7_Exception('Behavior cannot be created: function does not exists');
+    /**
+     * Creates and returns a new ORM behavior.
+     *
+     * @chainable
+     * @param string $type Type name
+     * @param mixed $id Parameter for find()
+     * @return  ORM
+     */
+    public static function factory($behavior, $config = null)
+    {
+        if (! is_string($behavior) and is_array($config)) {
+            if (! is_callable($config)) {
+                throw new KO7_Exception('Behavior cannot be created: function does not exists');
+            }
 
-			// This is either a callback as an array or a lambda
-			return new ORM_Behavior_LocalBehavior($config);
-		}
+            // This is either a callback as an array or a lambda
+            return new ORM_Behavior_LocalBehavior($config);
+        }
 
-		// Set class name
-		$behavior_name = 'ORM_Behavior_'.ucfirst($behavior);
+        // Set class name
+        $behavior_name = 'ORM_Behavior_' . ucfirst($behavior);
 
-		return new $behavior_name($config);
-	}
+        return new $behavior_name($config);
+    }
 
-	protected function __construct($config)
-	{
-		$this->_config = $config;
-	}
+    protected function __construct($config)
+    {
+        $this->_config = $config;
+    }
 
-	public function on_construct($model, $id) { return TRUE; }
-	public function on_create($model) { }
-	public function on_update($model) { }
+    public function on_construct($model, $id)
+    {
+        return true;
+    }
+
+    public function on_create($model)
+    {
+    }
+
+    public function on_update($model)
+    {
+    }
 }

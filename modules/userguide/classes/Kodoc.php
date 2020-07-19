@@ -1,3 +1,5 @@
 <?php
 
-class Kodoc extends KO7_Kodoc {}
+class Kodoc extends KO7_Kodoc
+{
+}

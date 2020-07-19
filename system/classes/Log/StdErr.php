@@ -1,3 +1,5 @@
 <?php
 
-class Log_StdErr extends KO7_Log_StdErr {}
+class Log_StdErr extends KO7_Log_StdErr
+{
+}

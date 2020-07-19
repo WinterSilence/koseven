@@ -1,3 +1,5 @@
 <?php
 
-class Encrypt extends KO7_Encrypt {}
+class Encrypt extends KO7_Encrypt
+{
+}

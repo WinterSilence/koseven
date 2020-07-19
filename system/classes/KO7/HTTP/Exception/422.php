@@ -1,10 +1,11 @@
 <?php
 
-class KO7_HTTP_Exception_422 extends HTTP_Exception {
+class KO7_HTTP_Exception_422 extends HTTP_Exception
+{
 
-	/**
-	 * @var   integer    HTTP 422 Unprocessable Entity
-	 */
-	protected $_code = 422;
+    /**
+     * @var   integer    HTTP 422 Unprocessable Entity
+     */
+    protected $_code = 422;
 
 }

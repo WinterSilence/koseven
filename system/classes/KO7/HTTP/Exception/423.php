@@ -1,10 +1,11 @@
 <?php
 
-class KO7_HTTP_Exception_423 extends HTTP_Exception {
+class KO7_HTTP_Exception_423 extends HTTP_Exception
+{
 
-	/**
-	 * @var   integer    HTTP 423 Locked
-	 */
-	protected $_code = 423;
+    /**
+     * @var   integer    HTTP 423 Locked
+     */
+    protected $_code = 423;
 
 }

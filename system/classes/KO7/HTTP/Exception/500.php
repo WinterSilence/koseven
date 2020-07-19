@@ -1,10 +1,11 @@
 <?php
 
-class KO7_HTTP_Exception_500 extends HTTP_Exception {
+class KO7_HTTP_Exception_500 extends HTTP_Exception
+{
 
-	/**
-	 * @var   integer    HTTP 500 Internal Server Error
-	 */
-	protected $_code = 500;
+    /**
+     * @var   integer    HTTP 500 Internal Server Error
+     */
+    protected $_code = 500;
 
 }

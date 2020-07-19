@@ -1,19 +1,19 @@
 <?php
+
 /**
  * Interface KO7_REST_Format
  * This interface needs to be extended from every REST-Formatter
- *
  * The following formatter come shipped with Koseven:
  *  - JSON
  *  - XML
  *  - HTML
  *
  * @package        KO7\REST
- *
  * @copyright  (c) since 2016 Koseven Team
  * @license        https://koseven.ga/LICENSE
  */
-abstract class KO7_REST_Format {
+abstract class KO7_REST_Format
+{
 
     /**
      * Default Output Format
@@ -46,39 +46,38 @@ abstract class KO7_REST_Format {
     /**
      * Factory Method for REST Formatter
      *
-     * @param Request  $request  Request Class
+     * @param Request $request Request Class
      * @param Response $response Response Class
-     *
-     * @throws REST_Exception
-     *
      * @return REST_Format
+     * @throws REST_Exception
      */
-    public static function factory(Request $request, Response $response) : REST_Format
+    public static function factory(Request $request, Response $response): REST_Format
     {
         // Check if format is set by route, otherwise use default
-        if ($request->format() === NULL)
-        {
+        if ($request->format() === null) {
             $request->format(static::$default_format);
         }
 
-        $formatter = 'REST_Format_'.$request->format();
+        $formatter = 'REST_Format_' . $request->format();
 
         // Check if formatter Exists
-        if ( ! class_exists($formatter))
-        {
-            throw new REST_Exception('Formatter :formatter does not exist.', [
-                ':formatter' => get_class($formatter)
-            ]);
+        if (! class_exists($formatter)) {
+            throw new REST_Exception(
+                'Formatter :formatter does not exist.', [
+                ':formatter' => get_class($formatter),
+            ]
+            );
         }
 
         $formatter = new $formatter($request, $response);
 
         // Check if client extends Request_Client_External
-        if ( ! $formatter instanceof REST_Format)
-        {
-            throw new REST_Exception(':formatter is not a valid REST formatter.', [
-                ':formatter' => get_class($formatter)
-            ]);
+        if (! $formatter instanceof REST_Format) {
+            throw new REST_Exception(
+                ':formatter is not a valid REST formatter.', [
+                ':formatter' => get_class($formatter),
+            ]
+            );
         }
 
         // Set response content type by format used
@@ -99,10 +98,9 @@ abstract class KO7_REST_Format {
 
         // Make sure body is an array
         $body = $response->body();
-        if (is_string($body))
-        {
+        if (is_string($body)) {
             $body = [
-              'body' => $body
+                'body' => $body,
             ];
         }
 
@@ -114,6 +112,6 @@ abstract class KO7_REST_Format {
      *
      * @return string
      */
-    abstract public function format() : string;
+    abstract public function format(): string;
 
 }

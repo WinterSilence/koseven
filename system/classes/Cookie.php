@@ -1,3 +1,5 @@
 <?php
 
-class Cookie extends KO7_Cookie {}
+class Cookie extends KO7_Cookie
+{
+}

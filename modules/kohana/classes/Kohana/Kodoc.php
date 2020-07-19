@@ -1,5 +1,8 @@
 <?php
+
 /**
  * @deprecated  since version 4.0 - Please use according KO7 Class instead.
  */
-class Kohana_Kodoc extends KO7_Kodoc {}
+class Kohana_Kodoc extends KO7_Kodoc
+{
+}

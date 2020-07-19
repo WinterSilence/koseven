@@ -1,198 +1,177 @@
 <?php
+
 /**
  * PHPUnit Test Suite for Koseven
  *
  * @package    KO7/UnitTest
- *
- * @author	   Koseven Team, Paul Banks, BRMatt <matthew@sigswitch.com>
+ * @author       Koseven Team, Paul Banks, BRMatt <matthew@sigswitch.com>
  * @copyright  (c) 2007-2012 Kohana Team
  * @copyright  (c) 2016-2018 Koseven Team
  * @license    https://koseven.dev/LICENSE
- *
  * @codeCoverageIgnore Basic Test Suite / PHPUnit Test loader. Individual functions tested by there self.
  */
-class KO7_Unittest_Tests {
+class KO7_Unittest_Tests
+{
 
-	/**
-	 * Holds Cached Files
-	 * @var array
-	 */
-	protected static $cache = [];
+    /**
+     * Holds Cached Files
+     *
+     * @var array
+     */
+    protected static $cache = [];
 
-	/**
-	 * Loads test files that don't match the naming convention of kohana
-	 * @param string $class
-	 *
-	 * @codeCoverageIgnore Simple Autlo-Loader find_file is tested in system tests, no need to test
-	 */
-	public static function autoload(string $class) : void
-	{
-		$file = KO7::find_file('tests', str_replace('_', '/', $class));
-		if ($file)
-		{
-			require_once $file;
-		}
-	}
-	/**
-	 * Configures the environment for testing
-	 *
-	 * Does the following:
-	 *
-	 * - Restores exception and error handlers (for cli)
-	 * - registers an autoloader to load test files
-	 */
-	public static function configure_environment() : void
-	{
-		restore_exception_handler();
-		restore_error_handler();
-		spl_autoload_register(['Unittest_tests', 'autoload']);
-	}
+    /**
+     * Loads test files that don't match the naming convention of kohana
+     *
+     * @param string $class
+     * @codeCoverageIgnore Simple Autlo-Loader find_file is tested in system tests, no need to test
+     */
+    public static function autoload(string $class): void
+    {
+        $file = KO7::find_file('tests', str_replace('_', '/', $class));
+        if ($file) {
+            require_once $file;
+        }
+    }
 
-	/**
-	 * Creates the test suite for kohana
-	 *
-	 * @return Unittest_TestSuite
-	 * @throws KO7_Exception
-	 * @throws ReflectionException
-	 */
-	public static function suite(): \Unittest_TestSuite
-	{
-		self::configure_environment();
-		$suite = new Unittest_TestSuite;
+    /**
+     * Configures the environment for testing
+     * Does the following:
+     * - Restores exception and error handlers (for cli)
+     * - registers an autoloader to load test files
+     */
+    public static function configure_environment(): void
+    {
+        restore_exception_handler();
+        restore_error_handler();
+        spl_autoload_register(['Unittest_tests', 'autoload']);
+    }
 
-		// Load the whitelist and blacklist for code coverage
-		$config = KO7::$config->load('unittest');
-		if ($config->use_whitelist)
-		{
-			self::whitelist($suite);
-		}
+    /**
+     * Creates the test suite for kohana
+     *
+     * @return Unittest_TestSuite
+     * @throws KO7_Exception
+     * @throws ReflectionException
+     */
+    public static function suite(): \Unittest_TestSuite
+    {
+        self::configure_environment();
+        $suite = new Unittest_TestSuite;
 
-		// Add tests
-		$files = KO7::list_files('tests');
-		self::addTests($suite, $files);
-		return $suite;
-	}
-	/**
-	 * Add files to test suite $suite
-	 *
-	 * Uses recursion to scan subdirectories
-	 *
-	 * @param Unittest_TestSuite  $suite   The test suite to add to
-	 * @param array               $files   Array of files to test
-	 *
-	 * @throws ReflectionException
-	 */
-	public static function addTests(Unittest_TestSuite $suite, array $files) : void
-	{
-		foreach ($files as $path => $file)
-		{
-			if (is_array($file))
-			{
-				if ($path !== 'tests'.DIRECTORY_SEPARATOR.'test_data')
-				{
-					self::addTests($suite, $file);
-				}
-			}
-			elseif (is_file($file) && substr($file, -strlen(EXT)) === EXT)
-			{
-				$suite->addTestFile($file);
-			}
-		}
-	}
-	/**
-	 * Sets the whitelist
-	 *
-	 * If no directories are provided then the function'll load the whitelist
-	 * set in the config file
-	 *
-	 * @param Unittest_Testsuite   $suite 		  Suite to load the whitelist into
-	 *
-	 * @throws KO7_Exception
-	 */
-	public static function whitelist(Unittest_TestSuite $suite = NULL) : void
-	{
-		$directories = self::get_config_whitelist();
-		if (count($directories))
-		{
-			foreach ($directories as &$directory)
-			{
-				$directory = realpath($directory).'/';
-			}
-			unset($directory);
+        // Load the whitelist and blacklist for code coverage
+        $config = KO7::$config->load('unittest');
+        if ($config->use_whitelist) {
+            self::whitelist($suite);
+        }
 
-			// Only whitelist the "top" files in the cascading filesystem
-			self::set_whitelist(KO7::list_files('classes', $directories), $suite);
-		}
-	}
-	/**
-	 * Works out the whitelist from the config
-	 * Used only on the CLI
-	 *
-	 * @return array	Array of directories to whitelist
-	 * @throws KO7_Exception
-	 */
-	protected static function get_config_whitelist() : array
-	{
-		$config = KO7::$config->load('unittest');
-		$directories = [];
-		if ($config->whitelist['app'])
-		{
-			$directories['k_app'] = APPPATH;
-		}
-		$modules = $config->whitelist['modules'];
-		if ($modules)
-		{
-			$k_modules = KO7::modules();
+        // Add tests
+        $files = KO7::list_files('tests');
+        self::addTests($suite, $files);
+        return $suite;
+    }
 
-			// Have to do this because kohana merges config...
-			// If you want to include all modules & override defaults then TRUE must be the first
-			// value in the modules array of your app/config/unittest file
-			if (array_search(TRUE, $modules, TRUE) === (count($modules) - 1))
-			{
-				$modules = $k_modules;
-			}
-			elseif (in_array(FALSE, $modules, TRUE)) {
-				// modules are disabled
-				$modules = [];
-			}
-			else {
-				$modules = array_intersect_key($k_modules, array_combine($modules, $modules));
-			}
-			$directories += $modules;
-		}
-		if ($config->whitelist['system'])
-		{
-			$directories['k_sys'] = SYSPATH;
-		}
-		return $directories;
-	}
+    /**
+     * Add files to test suite $suite
+     * Uses recursion to scan subdirectories
+     *
+     * @param Unittest_TestSuite $suite The test suite to add to
+     * @param array $files Array of files to test
+     * @throws ReflectionException
+     */
+    public static function addTests(Unittest_TestSuite $suite, array $files): void
+    {
+        foreach ($files as $path => $file) {
+            if (is_array($file)) {
+                if ($path !== 'tests' . DIRECTORY_SEPARATOR . 'test_data') {
+                    self::addTests($suite, $file);
+                }
+            } elseif (is_file($file) && substr($file, -strlen(EXT)) === EXT) {
+                $suite->addTestFile($file);
+            }
+        }
+    }
 
-	/**
-	 * Recursively whitelists an array of files
-	 *
-	 * @param array 			 $files	 Array of files to whitelist
-	 * @param Unittest_TestSuite $suite  Suite to load the whitelist into
-	 */
-	protected static function set_whitelist(array $files, Unittest_TestSuite $suite) : void
-	{
-		foreach ($files as $file)
-		{
-			if (is_array($file))
-			{
-				self::set_whitelist($file, $suite);
-			}
-			else
-			{
-				if ( ! isset(self::$cache[$file]))
-				{
-					$relative_path = substr($file, strrpos($file, 'classes'.DIRECTORY_SEPARATOR) + 8, -strlen(EXT));
-					$cascading_file = KO7::find_file('classes', $relative_path);
-					// The theory is that if this file is the highest one in the cascading filesystem
-					// then it's safe to whitelist
-					self::$cache[$file] =  ($cascading_file === $file);
-				}
-				$suite->addFileToWhitelist($file);
-			}
-		}
-	}
+    /**
+     * Sets the whitelist
+     * If no directories are provided then the function'll load the whitelist
+     * set in the config file
+     *
+     * @param Unittest_Testsuite $suite Suite to load the whitelist into
+     * @throws KO7_Exception
+     */
+    public static function whitelist(Unittest_TestSuite $suite = null): void
+    {
+        $directories = self::get_config_whitelist();
+        if (count($directories)) {
+            foreach ($directories as &$directory) {
+                $directory = realpath($directory) . '/';
+            }
+            unset($directory);
+
+            // Only whitelist the "top" files in the cascading filesystem
+            self::set_whitelist(KO7::list_files('classes', $directories), $suite);
+        }
+    }
+
+    /**
+     * Works out the whitelist from the config
+     * Used only on the CLI
+     *
+     * @return array    Array of directories to whitelist
+     * @throws KO7_Exception
+     */
+    protected static function get_config_whitelist(): array
+    {
+        $config = KO7::$config->load('unittest');
+        $directories = [];
+        if ($config->whitelist['app']) {
+            $directories['k_app'] = APPPATH;
+        }
+        $modules = $config->whitelist['modules'];
+        if ($modules) {
+            $k_modules = KO7::modules();
+
+            // Have to do this because kohana merges config...
+            // If you want to include all modules & override defaults then TRUE must be the first
+            // value in the modules array of your app/config/unittest file
+            if (array_search(true, $modules, true) === (count($modules) - 1)) {
+                $modules = $k_modules;
+            } elseif (in_array(false, $modules, true)) {
+                // modules are disabled
+                $modules = [];
+            } else {
+                $modules = array_intersect_key($k_modules, array_combine($modules, $modules));
+            }
+            $directories += $modules;
+        }
+        if ($config->whitelist['system']) {
+            $directories['k_sys'] = SYSPATH;
+        }
+        return $directories;
+    }
+
+    /**
+     * Recursively whitelists an array of files
+     *
+     * @param array $files Array of files to whitelist
+     * @param Unittest_TestSuite $suite Suite to load the whitelist into
+     */
+    protected static function set_whitelist(array $files, Unittest_TestSuite $suite): void
+    {
+        foreach ($files as $file) {
+            if (is_array($file)) {
+                self::set_whitelist($file, $suite);
+            } else {
+                if (! isset(self::$cache[$file])) {
+                    $relative_path = substr($file, strrpos($file, 'classes' . DIRECTORY_SEPARATOR) + 8, -strlen(EXT));
+                    $cascading_file = KO7::find_file('classes', $relative_path);
+                    // The theory is that if this file is the highest one in the cascading filesystem
+                    // then it's safe to whitelist
+                    self::$cache[$file] = ($cascading_file === $file);
+                }
+                $suite->addFileToWhitelist($file);
+            }
+        }
+    }
 }

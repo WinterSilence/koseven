@@ -1,17 +1,29 @@
 <h2>Modules</h2>
 
-<?php if( ! empty($modules)): ?>
+<?php
+if (! empty($modules)): ?>
 
-	<ul>
-	<?php foreach($modules as $url => $options): ?>
-	
-		<li><?php echo html::anchor(Route::get('docs/guide')->uri(['module' => $url]), $options['name'], NULL, NULL, TRUE) ?></li>
-	
-	<?php endforeach; ?>
-	</ul>
+    <ul>
+        <?php
+        foreach ($modules as $url => $options): ?>
 
-<?php else: ?>
+            <li><?php
+                echo html::anchor(
+                    Route::get('docs/guide')->uri(['module' => $url]),
+                    $options['name'],
+                    null,
+                    null,
+                    true
+                ) ?></li>
 
-	<p class="error">No modules.</p>
+        <?php
+        endforeach; ?>
+    </ul>
 
-<?php endif; ?>
+<?php
+else: ?>
+
+    <p class="error">No modules.</p>
+
+<?php
+endif; ?>

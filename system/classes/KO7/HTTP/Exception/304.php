@@ -1,10 +1,11 @@
 <?php
 
-class KO7_HTTP_Exception_304 extends HTTP_Exception_Expected {
+class KO7_HTTP_Exception_304 extends HTTP_Exception_Expected
+{
 
-	/**
-	 * @var   integer    HTTP 304 Not Modified
-	 */
-	protected $_code = 304;
+    /**
+     * @var   integer    HTTP 304 Not Modified
+     */
+    protected $_code = 304;
 
 }

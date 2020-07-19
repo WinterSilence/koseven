@@ -1,5 +1,8 @@
 <?php
+
 /**
  * @deprecated  since version 4.0 - Please use according KO7 Class instead.
  */
-class Kohana_Database_PDO extends KO7_Database_PDO {}
+class Kohana_Database_PDO extends KO7_Database_PDO
+{
+}

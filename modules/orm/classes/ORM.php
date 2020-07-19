@@ -1,3 +1,5 @@
 <?php
 
-class ORM extends KO7_ORM {}
+class ORM extends KO7_ORM
+{
+}

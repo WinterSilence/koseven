@@ -1,3 +1,5 @@
 <?php
 
-class DB extends KO7_DB {}
+class DB extends KO7_DB
+{
+}

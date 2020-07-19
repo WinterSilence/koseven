@@ -1,3 +1,5 @@
 <?php
 
-class Arr extends KO7_Arr {}
+class Arr extends KO7_Arr
+{
+}

@@ -4,7 +4,9 @@
 $data = base64_encode(file_get_contents('https://kohanaframework.org/img/kohana-logo.png'));
 
 // Create the logo file
-file_put_contents('logo.php', "<?php
+file_put_contents(
+    'logo.php',
+    "<?php
 /**
  * Kohana Logo, base64_encoded PNG
  * 
@@ -12,4 +14,5 @@ file_put_contents('logo.php', "<?php
  * @copyright  (c) since 2016 Koseven Team
  * @license    https://koseven.dev/LICENSE
  */
-return array('mime' => 'image/png', 'data' => '{$data}'); ?>");
+return array('mime' => 'image/png', 'data' => '{$data}'); ?>"
+);

@@ -1,3 +1,5 @@
 <?php
 
-class Request extends KO7_Request {}
+class Request extends KO7_Request
+{
+}

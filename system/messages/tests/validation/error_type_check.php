@@ -2,8 +2,8 @@
 
 return [
 
-	'email' => [
-		'custom' => 'very nice email address you have there',
-	],
+    'email' => [
+        'custom' => 'very nice email address you have there',
+    ],
 
 ];

@@ -1,3 +1,5 @@
 <?php
 
-class Auth_ORM extends KO7_Auth_ORM { }
+class Auth_ORM extends KO7_Auth_ORM
+{
+}

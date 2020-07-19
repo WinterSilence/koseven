@@ -1,3 +1,5 @@
 <?php
 
-class Route extends KO7_Route {}
+class Route extends KO7_Route
+{
+}

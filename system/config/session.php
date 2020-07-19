@@ -2,8 +2,8 @@
 
 return [
 
-	'cookie' => [
-		'encrypted' => FALSE,
-	],
+    'cookie' => [
+        'encrypted' => false,
+    ],
 
 ];

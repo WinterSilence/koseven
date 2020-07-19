@@ -1,181 +1,181 @@
 <?php
+
 /**
  * Database query builder for WHERE statements. See [Query Builder](/database/query/builder) for usage and examples.
  *
  * @package    KO7/Database
  * @category   Query
- *
  * @copyright  (c) 2007-2016  Kohana Team
  * @copyright  (c) since 2016 Koseven Team
  * @license    https://koseven.dev/LICENSE
  */
-abstract class KO7_Database_Query_Builder_Where extends Database_Query_Builder {
+abstract class KO7_Database_Query_Builder_Where extends Database_Query_Builder
+{
 
-	// WHERE ...
-	protected $_where = [];
+    // WHERE ...
+    protected $_where = [];
 
-	// ORDER BY ...
-	protected $_order_by = [];
+    // ORDER BY ...
+    protected $_order_by = [];
 
-	// LIMIT ...
-	protected $_limit = NULL;
+    // LIMIT ...
+    protected $_limit = null;
 
-	/**
-	 * Alias of and_where()
-	 *
-	 * @param   mixed   $column  column name or array($column, $alias) or object
-	 * @param   string  $op      logic operator
-	 * @param   mixed   $value   column value
-	 * @return  $this
-	 */
-	public function where($column, $op, $value)
-	{
-		return $this->and_where($column, $op, $value);
-	}
+    /**
+     * Alias of and_where()
+     *
+     * @param mixed $column column name or array($column, $alias) or object
+     * @param string $op logic operator
+     * @param mixed $value column value
+     * @return  $this
+     */
+    public function where($column, $op, $value)
+    {
+        return $this->and_where($column, $op, $value);
+    }
 
-	/**
-	 * Creates a new "AND WHERE" condition for the query.
-	 *
-	 * @param   mixed   $column  column name or array($column, $alias) or object
-	 * @param   string  $op      logic operator
-	 * @param   mixed   $value   column value
-	 * @return  $this
-	 */
-	public function and_where($column, $op, $value)
-	{
-		$this->_where[] = ['AND' => [$column, $op, $value]];
+    /**
+     * Creates a new "AND WHERE" condition for the query.
+     *
+     * @param mixed $column column name or array($column, $alias) or object
+     * @param string $op logic operator
+     * @param mixed $value column value
+     * @return  $this
+     */
+    public function and_where($column, $op, $value)
+    {
+        $this->_where[] = ['AND' => [$column, $op, $value]];
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Creates a new "OR WHERE" condition for the query.
-	 *
-	 * @param   mixed   $column  column name or array($column, $alias) or object
-	 * @param   string  $op      logic operator
-	 * @param   mixed   $value   column value
-	 * @return  $this
-	 */
-	public function or_where($column, $op, $value)
-	{
-		$this->_where[] = ['OR' => [$column, $op, $value]];
+    /**
+     * Creates a new "OR WHERE" condition for the query.
+     *
+     * @param mixed $column column name or array($column, $alias) or object
+     * @param string $op logic operator
+     * @param mixed $value column value
+     * @return  $this
+     */
+    public function or_where($column, $op, $value)
+    {
+        $this->_where[] = ['OR' => [$column, $op, $value]];
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Alias of and_where_open()
-	 *
-	 * @return  $this
-	 */
-	public function where_open()
-	{
-		return $this->and_where_open();
-	}
+    /**
+     * Alias of and_where_open()
+     *
+     * @return  $this
+     */
+    public function where_open()
+    {
+        return $this->and_where_open();
+    }
 
-	/**
-	 * Opens a new "AND WHERE (...)" grouping.
-	 *
-	 * @return  $this
-	 */
-	public function and_where_open()
-	{
-		$this->_where[] = ['AND' => '('];
+    /**
+     * Opens a new "AND WHERE (...)" grouping.
+     *
+     * @return  $this
+     */
+    public function and_where_open()
+    {
+        $this->_where[] = ['AND' => '('];
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Opens a new "OR WHERE (...)" grouping.
-	 *
-	 * @return  $this
-	 */
-	public function or_where_open()
-	{
-		$this->_where[] = ['OR' => '('];
+    /**
+     * Opens a new "OR WHERE (...)" grouping.
+     *
+     * @return  $this
+     */
+    public function or_where_open()
+    {
+        $this->_where[] = ['OR' => '('];
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Closes an open "WHERE (...)" grouping.
-	 *
-	 * @return  $this
-	 */
-	public function where_close()
-	{
-		return $this->and_where_close();
-	}
+    /**
+     * Closes an open "WHERE (...)" grouping.
+     *
+     * @return  $this
+     */
+    public function where_close()
+    {
+        return $this->and_where_close();
+    }
 
-	/**
-	 * Closes an open "WHERE (...)" grouping or removes the grouping when it is
-	 * empty.
-	 *
-	 * @return  $this
-	 */
-	public function where_close_empty()
-	{
-		$group = end($this->_where);
+    /**
+     * Closes an open "WHERE (...)" grouping or removes the grouping when it is
+     * empty.
+     *
+     * @return  $this
+     */
+    public function where_close_empty()
+    {
+        $group = end($this->_where);
 
-		if ($group AND reset($group) === '(')
-		{
-			array_pop($this->_where);
+        if ($group and reset($group) === '(') {
+            array_pop($this->_where);
 
-			return $this;
-		}
+            return $this;
+        }
 
-		return $this->where_close();
-	}
+        return $this->where_close();
+    }
 
-	/**
-	 * Closes an open "WHERE (...)" grouping.
-	 *
-	 * @return  $this
-	 */
-	public function and_where_close()
-	{
-		$this->_where[] = ['AND' => ')'];
+    /**
+     * Closes an open "WHERE (...)" grouping.
+     *
+     * @return  $this
+     */
+    public function and_where_close()
+    {
+        $this->_where[] = ['AND' => ')'];
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Closes an open "WHERE (...)" grouping.
-	 *
-	 * @return  $this
-	 */
-	public function or_where_close()
-	{
-		$this->_where[] = ['OR' => ')'];
+    /**
+     * Closes an open "WHERE (...)" grouping.
+     *
+     * @return  $this
+     */
+    public function or_where_close()
+    {
+        $this->_where[] = ['OR' => ')'];
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Applies sorting with "ORDER BY ..."
-	 *
-	 * @param   mixed   $column     column name or array($column, $alias) or object
-	 * @param   string  $direction  direction of sorting
-	 * @return  $this
-	 */
-	public function order_by($column, $direction = NULL)
-	{
-		$this->_order_by[] = [$column, $direction];
+    /**
+     * Applies sorting with "ORDER BY ..."
+     *
+     * @param mixed $column column name or array($column, $alias) or object
+     * @param string $direction direction of sorting
+     * @return  $this
+     */
+    public function order_by($column, $direction = null)
+    {
+        $this->_order_by[] = [$column, $direction];
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Return up to "LIMIT ..." results
-	 *
-	 * @param   integer  $number  maximum results to return or NULL to reset
-	 * @return  $this
-	 */
-	public function limit($number)
-	{
-		$this->_limit = ($number === NULL) ? NULL : (int) $number;
+    /**
+     * Return up to "LIMIT ..." results
+     *
+     * @param integer $number maximum results to return or NULL to reset
+     * @return  $this
+     */
+    public function limit($number)
+    {
+        $this->_limit = ($number === null) ? null : (int) $number;
 
-		return $this;
-	}
+        return $this;
+    }
 
 } // End Database_Query_Builder_Where

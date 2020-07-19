@@ -1,3 +1,5 @@
 <?php
 
-abstract class Image extends KO7_Image {}
+abstract class Image extends KO7_Image
+{
+}

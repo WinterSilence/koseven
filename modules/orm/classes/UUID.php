@@ -1,3 +1,5 @@
 <?php
 
-class UUID extends KO7_UUID {}
+class UUID extends KO7_UUID
+{
+}

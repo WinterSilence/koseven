@@ -1,10 +1,11 @@
 <?php
 
-class KO7_HTTP_Exception_410 extends HTTP_Exception {
+class KO7_HTTP_Exception_410 extends HTTP_Exception
+{
 
-	/**
-	 * @var   integer    HTTP 410 Gone
-	 */
-	protected $_code = 410;
+    /**
+     * @var   integer    HTTP 410 Gone
+     */
+    protected $_code = 410;
 
 }

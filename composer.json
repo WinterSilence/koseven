@@ -30,13 +30,14 @@
   },
   "require": {
     "php": ">=7.2",
+    "ext-mbstring": "*",
     "ext-dom": "*",
     "ext-json": "*",
     "ext-simplexml": "*",
     "ext-libxml": "*"
   },
   "require-dev": {
-    "phpunit/phpunit": "^7.5",
+    "phpunit/phpunit": "^8.5",
     "internations/http-mock": "^0.12"
   },
   "conflict": {
